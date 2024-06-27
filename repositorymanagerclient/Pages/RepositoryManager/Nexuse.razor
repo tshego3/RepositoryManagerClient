@@ -1,0 +1,71 @@
+﻿@using Microsoft.FluentUI.AspNetCore.Components
+@using System.Diagnostics
+@using repositorymanagerclient.Shared
+
+@inject HttpClient Http
+@inject NavigationManager NavManager
+
+<div style="height: auto; overflow:auto;" tabindex="-1">
+    <FluentDataGrid Loading="true" ItemsProvider="nexuseProvider" ResizableColumns=true Pagination="@pagination" Virtualize="true" ItemSize="46" GenerateHeader="GenerateHeaderOption.Sticky" TGridItem="Models.RepositoryManager.Nexuse">
+        <PropertyColumn Title="ID" Property="@(c => c!.Id)" InitialSortDirection=SortDirection.Descending Sortable="true" IsDefaultSortColumn=true Comparer="@StringLengthComparer.Instance" />
+        <PropertyColumn Title="Nexuse" Property="@(c => c!.NexuseValue)" />
+        <PropertyColumn Title="Raw Nexuse" Property="@(c => c!.RawNexuse)" />
+        <TemplateColumn Title="Actions" Align="@Align.End">
+            <FluentButton aria-label="Edit item" IconEnd="@(new Icons.Regular.Size16.Edit())" OnClick="@(() => Debug.WriteLine("Delete clicked"))" />
+            <FluentButton aria-label="Delete item" IconEnd="@(new Icons.Regular.Size16.Delete())" OnClick="@(() => Debug.WriteLine("Delete clicked"))" />
+        </TemplateColumn>
+    </FluentDataGrid>
+
+    <FluentPaginator State="@pagination">
+        <SummaryTemplate>
+            There are <strong>@(pagination.TotalItemCount ?? 0)</strong> rows
+        </SummaryTemplate>
+        <PaginationTextTemplate>
+            This is page <strong>@(pagination.CurrentPageIndex + 1)</strong> out of a total of <strong>@(pagination.LastPageIndex + 1)</strong> pages
+        </PaginationTextTemplate>
+    </FluentPaginator>
+</div>
+
+<p>Total: <strong>@numResults results found</strong></p>
+
+@code {
+    PaginationState pagination = new PaginationState { ItemsPerPage = 15 };
+    GridItemsProvider<Models.RepositoryManager.Nexuse> nexuseProvider = default!;
+    int numResults;
+
+    protected override async Task OnInitializedAsync()
+    {
+        nexuseProvider = async req =>
+        {
+            List<Models.RepositoryManager.Nexuse> response = await WebRequests.GetAsync<List<Models.RepositoryManager.Nexuse>>(Enums.WebRequestEndpoint.RepositoryManagerNexuse);
+            if (req.Count is null)
+            {
+                await Task.Delay(2500);
+            }
+            return GridItemsProviderResult.From(
+                items: response,
+                totalItemCount: response.Count);
+        };
+        numResults = (await WebRequests.GetAsync<List<Models.RepositoryManager.Nexuse>>(Enums.WebRequestEndpoint.RepositoryManagerNexuse)).Count;
+    }
+
+    public class StringLengthComparer : IComparer<string>
+    {
+        public static readonly StringLengthComparer Instance = new StringLengthComparer();
+
+        public int Compare(string? x, string? y)
+        {
+            if (x is null)
+            {
+                return y is null ? 0 : -1;
+            }
+
+            if (y is null)
+            {
+                return 1;
+            }
+
+            return x.Length.CompareTo(y.Length);
+        }
+    }
+}
