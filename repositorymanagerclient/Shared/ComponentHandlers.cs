@@ -6,21 +6,29 @@ namespace repositorymanagerclient.Shared
 {
     public static class ComponentHandlers
     {
-        //public static void HandleFilter<T>(ChangeEventArgs args, out string filter)
-        //{
-        //    if (args.Value is string value)
-        //    {
-        //        filter = value;
-        //    }
-        //}
+        public static void HandleFilter(ChangeEventArgs args, out string filter)
+        {
+            if (args.Value is string value)
+            {
+                filter = value;
+            }
+            else
+            {
+                filter = default!;
+            }
+        }
 
-        //public static void HandleClear<T>(out string? filter)
-        //{
-        //    if (string.IsNullOrWhiteSpace(filter))
-        //    {
-        //        filter = string.Empty;
-        //    }
-        //}
+        public static void HandleClear(string _filter, out string filter)
+        {
+            if (string.IsNullOrWhiteSpace(_filter))
+            {
+                filter = string.Empty;
+            }
+            else
+            {
+                filter = default!;
+            }
+        }
 
         public static void HandleRowFocus<T>(FluentDataGridRow<T> row = default!)
         {

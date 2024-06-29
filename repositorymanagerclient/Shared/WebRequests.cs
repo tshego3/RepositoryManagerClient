@@ -98,11 +98,11 @@ namespace repositorymanagerclient.Shared
                 switch (webRequestEndpoint)
                 {
                     case Enums.WebRequestEndpoint.RepositoryManagerNexuse:
-                        return "";
+                        return Environment.GetEnvironmentVariable("RepositoryManagerNexuse")!;
                     case Enums.WebRequestEndpoint.RepositoryManagerNote:
-                        return "";
+                        return Environment.GetEnvironmentVariable("RepositoryManagerNote")!;
                     case Enums.WebRequestEndpoint.RepositoryManagerVibration:
-                        return "";
+                        return Environment.GetEnvironmentVariable("RepositoryManagerVibration")!;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(webRequestEndpoint), webRequestEndpoint, null);
                 }
