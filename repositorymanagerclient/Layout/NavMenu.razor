@@ -3,9 +3,12 @@
     <label for="navmenu-toggle" class="navmenu-icon"><FluentIcon Value="@(new Icons.Regular.Size20.Navigation())" Color="Color.Fill" /></label>
     <nav class="sitenav" aria-labelledby="main-menu">
         <FluentNavMenu Id="main-menu" Width="250" Collapsible="true" Title="Navigation menu" @bind-Expanded="expanded" CustomToggle="true">
-             <FluentNavLink Href="/" Match="NavLinkMatch.All" Icon="@(new Icons.Regular.Size20.Home())" IconColor="Color.Accent">Home</FluentNavLink>
-             <FluentNavLink Href="counter" Icon="@(new Icons.Regular.Size20.NumberSymbolSquare())" IconColor="Color.Accent">Counter</FluentNavLink>
-             <FluentNavLink Href="weather" Icon="@(new Icons.Regular.Size20.WeatherPartlyCloudyDay())" IconColor="Color.Accent">Weather</FluentNavLink>
+            <FluentNavLink Href="/" Match="NavLinkMatch.All" Icon="@(new Icons.Regular.Size20.Home())" IconColor="Color.Accent">Home</FluentNavLink>
+            <FluentNavGroup Title="Repository Manager" @bind-Expanded="expanded" Icon="@(new Icons.Regular.Size20.AppsList())">
+                <FluentNavLink Href="/repositorymanager/nexuse" Icon="@(new Icons.Regular.Size20.Attach())">Nexuse</FluentNavLink>
+                <FluentNavLink Href="/repositorymanager/nexuse" Icon="@(new Icons.Regular.Size20.Note())">Note</FluentNavLink>
+                <FluentNavLink Href="/repositorymanager/nexuse" Icon="@(new Icons.Regular.Size20.Speaker2())">Vibration</FluentNavLink>
+            </FluentNavGroup>
         </FluentNavMenu>
     </nav>
 </div>

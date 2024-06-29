@@ -1,71 +1,87 @@
-﻿@using Microsoft.FluentUI.AspNetCore.Components
+﻿@page "/repositorymanager/nexuse"
+
+@using Microsoft.FluentUI.AspNetCore.Components
 @using System.Diagnostics
 @using repositorymanagerclient.Shared
 
 @inject HttpClient Http
 @inject NavigationManager NavManager
 
-<div style="height: auto; overflow:auto;" tabindex="-1">
-    <FluentDataGrid Loading="true" ItemsProvider="nexuseProvider" ResizableColumns=true Pagination="@pagination" Virtualize="true" ItemSize="46" GenerateHeader="GenerateHeaderOption.Sticky" TGridItem="Models.RepositoryManager.Nexuse">
-        <PropertyColumn Title="ID" Property="@(c => c!.Id)" InitialSortDirection=SortDirection.Descending Sortable="true" IsDefaultSortColumn=true Comparer="@StringLengthComparer.Instance" />
-        <PropertyColumn Title="Nexuse" Property="@(c => c!.NexuseValue)" />
-        <PropertyColumn Title="Raw Nexuse" Property="@(c => c!.RawNexuse)" />
-        <TemplateColumn Title="Actions" Align="@Align.End">
-            <FluentButton aria-label="Edit item" IconEnd="@(new Icons.Regular.Size16.Edit())" OnClick="@(() => Debug.WriteLine("Delete clicked"))" />
-            <FluentButton aria-label="Delete item" IconEnd="@(new Icons.Regular.Size16.Delete())" OnClick="@(() => Debug.WriteLine("Delete clicked"))" />
-        </TemplateColumn>
-    </FluentDataGrid>
+@if (nexuses == null)
+{
+    <FluentProgressRing></FluentProgressRing>
+}
+else
+{
+    <div style="height: auto; overflow:auto;" tabindex="-1">
+        <FluentDataGrid Items="@FilteredItems"
+                ResizableColumns=true
+                Pagination="@pagination"
+                Virtualize="true"
+                GenerateHeader="GenerateHeaderOption.Sticky"
+                TGridItem="Models.RepositoryManager.Nexuse"
+                OnRowFocus="@(args => ComponentHandlers.HandleRowFocus<Models.RepositoryManager.Nexuse>(args))"
+                GridTemplateColumns="0.2fr 1fr 0.2fr 0.2fr"
+                Style="height: auto; overflow:auto;"
+                ShowHover="true">
+            <PropertyColumn Title="ID" Property="@(c => c!.Id)" />
+            <PropertyColumn Title="Nexuse" Property="@(c => c!.NexuseValue)" InitialSortDirection=SortDirection.Descending Sortable="true" IsDefaultSortColumn=true Comparer="@ComponentHandlers.StringLengthComparer.Instance">
+                <ColumnOptions>
+                    <div class="search-box">
+                        <FluentSearch type="search" Autofocus=true @bind-Value=nexuseFilter @oninput="HandleFilter" AfterBindValue="HandleClear" Placeholder="Nexuse..." />
+                    </div>
+                </ColumnOptions>
+            </PropertyColumn>
+            <PropertyColumn Title="Raw Nexuse" Property="@(c => c!.RawNexuse)" />
+            <TemplateColumn Title="Actions" Align="@Align.End">
+                <FluentButton aria-label="Edit item" IconEnd="@(new Icons.Regular.Size16.Edit())" OnClick="@(() => Debug.WriteLine("Delete clicked"))" />
+                <FluentButton aria-label="Delete item" IconEnd="@(new Icons.Regular.Size16.Delete())" OnClick="@(() => Debug.WriteLine("Delete clicked"))" />
+            </TemplateColumn>
+        </FluentDataGrid>
 
-    <FluentPaginator State="@pagination">
-        <SummaryTemplate>
-            There are <strong>@(pagination.TotalItemCount ?? 0)</strong> rows
-        </SummaryTemplate>
-        <PaginationTextTemplate>
-            This is page <strong>@(pagination.CurrentPageIndex + 1)</strong> out of a total of <strong>@(pagination.LastPageIndex + 1)</strong> pages
-        </PaginationTextTemplate>
-    </FluentPaginator>
-</div>
-
-<p>Total: <strong>@numResults results found</strong></p>
+        <FluentPaginator State="@pagination">
+            <SummaryTemplate>
+                There are <strong>@(pagination.TotalItemCount ?? 0)</strong> rows
+            </SummaryTemplate>
+            <PaginationTextTemplate>
+                This is page <strong>@(pagination.CurrentPageIndex + 1)</strong> out of a total of <strong>@(pagination.LastPageIndex + 1)</strong> pages
+            </PaginationTextTemplate>
+        </FluentPaginator>
+    </div>
+}
 
 @code {
-    PaginationState pagination = new PaginationState { ItemsPerPage = 15 };
-    GridItemsProvider<Models.RepositoryManager.Nexuse> nexuseProvider = default!;
-    int numResults;
+    private IQueryable<Models.RepositoryManager.Nexuse> nexuses = default!;
+    private PaginationState pagination = new PaginationState { ItemsPerPage = 20 };
+    private GridItemsProvider<Models.RepositoryManager.Nexuse> nexuseProvider = default!;
+    private int numResults = default;
+    private string nexuseFilter = string.Empty;
+
+    private IQueryable<Models.RepositoryManager.Nexuse> FilteredItems => nexuses.Where(x => x.NexuseValue.Contains(nexuseFilter, StringComparison.CurrentCultureIgnoreCase));
 
     protected override async Task OnInitializedAsync()
     {
-        nexuseProvider = async req =>
-        {
-            List<Models.RepositoryManager.Nexuse> response = await WebRequests.GetAsync<List<Models.RepositoryManager.Nexuse>>(Enums.WebRequestEndpoint.RepositoryManagerNexuse);
-            if (req.Count is null)
-            {
-                await Task.Delay(2500);
-            }
-            return GridItemsProviderResult.From(
-                items: response,
-                totalItemCount: response.Count);
-        };
-        numResults = (await WebRequests.GetAsync<List<Models.RepositoryManager.Nexuse>>(Enums.WebRequestEndpoint.RepositoryManagerNexuse)).Count;
+        nexuses = (await WebRequests.GetAsync<Models.RepositoryManager.Nexuse[]>(Enums.WebRequestEndpoint.RepositoryManagerNexuse)).AsQueryable();
     }
 
-    public class StringLengthComparer : IComparer<string>
+    private void HandleFilter(ChangeEventArgs args)
     {
-        public static readonly StringLengthComparer Instance = new StringLengthComparer();
-
-        public int Compare(string? x, string? y)
+        if (args.Value is string value)
         {
-            if (x is null)
-            {
-                return y is null ? 0 : -1;
-            }
-
-            if (y is null)
-            {
-                return 1;
-            }
-
-            return x.Length.CompareTo(y.Length);
+            nexuseFilter = value;
         }
+    }
+
+    private void HandleClear()
+    {
+        if (string.IsNullOrWhiteSpace(nexuseFilter))
+        {
+            nexuseFilter = string.Empty;
+        }
+    }
+
+    private void HandleRowFocus(FluentDataGridRow<Models.RepositoryManager.Nexuse> row)
+    {
+        Debug.WriteLine($"[Custom comparer] Row focused: {row.Item?.NexuseValue}");
     }
 }
