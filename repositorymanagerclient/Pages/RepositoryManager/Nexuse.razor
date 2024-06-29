@@ -5,6 +5,8 @@
 @using repositorymanagerclient.Shared
 
 @inject HttpClient Http
+@inject IConfiguration Configuration
+@inject ILogger<Nexuse> Logger
 @inject NavigationManager NavManager
 
 @if (nexuses == null)
@@ -52,15 +54,15 @@ else
 
 @code {
     private IQueryable<Models.RepositoryManager.Nexuse> nexuses = default!;
-    private PaginationState pagination = new PaginationState { ItemsPerPage = 20 };
+    private PaginationState pagination = new PaginationState { ItemsPerPage = 25 };
     private GridItemsProvider<Models.RepositoryManager.Nexuse> nexuseProvider = default!;
     private int numResults = default;
-    private string nexuseFilter = default!;
+    private string nexuseFilter = string.Empty!;
 
     private IQueryable<Models.RepositoryManager.Nexuse> FilteredItems => nexuses.Where(x => x.NexuseValue.Contains(nexuseFilter, StringComparison.CurrentCultureIgnoreCase));
 
     protected override async Task OnInitializedAsync()
     {
-        nexuses = (await WebRequests.GetAsync<Models.RepositoryManager.Nexuse[]>(Enums.WebRequestEndpoint.RepositoryManagerNexuse)).AsQueryable();
+        nexuses = (await WebRequests.GetAsync<Models.RepositoryManager.Nexuse[]>(Enums.WebRequestEndpoint.RepositoryManagerNexuse, Logger, Configuration)).AsQueryable();
     }
 }

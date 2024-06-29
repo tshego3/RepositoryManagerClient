@@ -1,114 +1,124 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System.Net.Http.Headers;
 
 namespace repositorymanagerclient.Shared
 {
     public static class WebRequests
     {
-        public static async Task<T> GetAsync<T>(Enums.WebRequestEndpoint webRequestEndpoint)
+        public static async Task<T> GetAsync<T>(Enums.WebRequestEndpoint webRequestEndpoint, ILogger logger, IConfiguration configuration)
         {
             try
             {
                 HttpClient client = new HttpClient();
-                HttpResponseMessage response = await client.GetAsync(GetUrl(webRequestEndpoint));
+                HttpResponseMessage response = await client.GetAsync(GetUrl(webRequestEndpoint, logger, configuration));
                 if (response.IsSuccessStatusCode.Equals(true))
                 {
-                    return JsonConvert.DeserializeObject<T>(await response.Content.ReadAsStringAsync())!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    return JsonConvert.DeserializeObject<T>(json)!;
                 }
                 else
                 {
                     return JsonConvert.DeserializeObject<T>(string.Empty)!;
                 }
             }
-            catch 
+            catch (Exception ex)
             {
+                logger.LogError(ex.Message);
                 return JsonConvert.DeserializeObject<T>(string.Empty)!;
             }
         }
 
-        public static async Task<T> PostAsync<T>(Enums.WebRequestEndpoint webRequestEndpoint, T model)
-        {
-            try
-            {
-                HttpClient client = new HttpClient();
-                HttpContent content = new StringContent(JsonConvert.SerializeObject(model), new MediaTypeHeaderValue("application/json"));
-                HttpResponseMessage response = await client.PostAsync(GetUrl(webRequestEndpoint), content);
-                if (response.IsSuccessStatusCode.Equals(true))
-                {
-                    return JsonConvert.DeserializeObject<T>(await response.Content.ReadAsStringAsync())!;
-                }
-                else
-                {
-                    return JsonConvert.DeserializeObject<T>(string.Empty)!;
-                }
-            }
-            catch
-            {
-                return JsonConvert.DeserializeObject<T>(string.Empty)!;
-            }
-        }
-
-        public static async Task<T> PutAsync<T>(Enums.WebRequestEndpoint webRequestEndpoint, T model)
+        public static async Task<T> PostAsync<T>(Enums.WebRequestEndpoint webRequestEndpoint, T model, ILogger logger, IConfiguration configuration)
         {
             try
             {
                 HttpClient client = new HttpClient();
                 HttpContent content = new StringContent(JsonConvert.SerializeObject(model), new MediaTypeHeaderValue("application/json"));
-                HttpResponseMessage response = await client.PutAsync(GetUrl(webRequestEndpoint), content);
+                HttpResponseMessage response = await client.PostAsync(GetUrl(webRequestEndpoint, logger, configuration), content);
                 if (response.IsSuccessStatusCode.Equals(true))
                 {
-                    return JsonConvert.DeserializeObject<T>(await response.Content.ReadAsStringAsync())!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    return JsonConvert.DeserializeObject<T>(json)!;
                 }
                 else
                 {
                     return JsonConvert.DeserializeObject<T>(string.Empty)!;
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                logger.LogError(ex.Message);
                 return JsonConvert.DeserializeObject<T>(string.Empty)!;
             }
         }
 
-        public static async Task<T> DeleteAsync<T>(Enums.WebRequestEndpoint webRequestEndpoint, T model)
+        public static async Task<T> PutAsync<T>(Enums.WebRequestEndpoint webRequestEndpoint, T model, ILogger logger, IConfiguration configuration)
         {
             try
             {
                 HttpClient client = new HttpClient();
-                HttpResponseMessage response = await client.DeleteAsync(GetUrl(webRequestEndpoint));
+                HttpContent content = new StringContent(JsonConvert.SerializeObject(model), new MediaTypeHeaderValue("application/json"));
+                HttpResponseMessage response = await client.PutAsync(GetUrl(webRequestEndpoint, logger, configuration), content);
                 if (response.IsSuccessStatusCode.Equals(true))
                 {
-                    return JsonConvert.DeserializeObject<T>(await response.Content.ReadAsStringAsync())!;
+                    string json = await response.Content.ReadAsStringAsync();
+                    return JsonConvert.DeserializeObject<T>(json)!;
                 }
                 else
                 {
                     return JsonConvert.DeserializeObject<T>(string.Empty)!;
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                logger.LogError(ex.Message);
                 return JsonConvert.DeserializeObject<T>(string.Empty)!;
             }
         }
 
-        private static string GetUrl(Enums.WebRequestEndpoint webRequestEndpoint)
+        public static async Task<T> DeleteAsync<T>(Enums.WebRequestEndpoint webRequestEndpoint, T model, ILogger logger, IConfiguration configuration)
+        {
+            try
+            {
+                HttpClient client = new HttpClient();
+                HttpResponseMessage response = await client.DeleteAsync(GetUrl(webRequestEndpoint, logger, configuration));
+                if (response.IsSuccessStatusCode.Equals(true))
+                {
+                    string json = await response.Content.ReadAsStringAsync();
+                    return JsonConvert.DeserializeObject<T>(json)!;
+                }
+                else
+                {
+                    return JsonConvert.DeserializeObject<T>(string.Empty)!;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.Message);
+                return JsonConvert.DeserializeObject<T>(string.Empty)!;
+            }
+        }
+
+        private static string GetUrl(Enums.WebRequestEndpoint webRequestEndpoint, ILogger logger, IConfiguration configuration)
         {
             try
             {
                 switch (webRequestEndpoint)
                 {
                     case Enums.WebRequestEndpoint.RepositoryManagerNexuse:
-                        return Environment.GetEnvironmentVariable("RepositoryManagerNexuse")!;
+                        return configuration.GetSection("RepositoryManagerNexuse").Value!;
                     case Enums.WebRequestEndpoint.RepositoryManagerNote:
-                        return Environment.GetEnvironmentVariable("RepositoryManagerNote")!;
+                        return configuration.GetSection("RepositoryManagerNote").Value!;
                     case Enums.WebRequestEndpoint.RepositoryManagerVibration:
-                        return Environment.GetEnvironmentVariable("RepositoryManagerVibration")!;
+                        return configuration.GetSection("RepositoryManagerVibration").Value!;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(webRequestEndpoint), webRequestEndpoint, null);
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                logger.LogError(ex.Message);
                 return string.Empty;
             }
         }

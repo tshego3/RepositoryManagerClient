@@ -14,7 +14,7 @@ namespace repositorymanagerclient.Shared
             }
             else
             {
-                filter = default!;
+                filter = string.Empty;
             }
         }
 
@@ -26,7 +26,7 @@ namespace repositorymanagerclient.Shared
             }
             else
             {
-                filter = default!;
+                filter = string.Empty;
             }
         }
 
