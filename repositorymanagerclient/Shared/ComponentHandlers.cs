@@ -37,7 +37,7 @@ namespace repositorymanagerclient.Shared
 
         public class StringLengthComparer : IComparer<string>
         {
-            public static readonly StringLengthComparer Instance = new StringLengthComparer();
+            public static readonly StringLengthComparer Instance = new();
 
             public int Compare(string? x, string? y)
             {

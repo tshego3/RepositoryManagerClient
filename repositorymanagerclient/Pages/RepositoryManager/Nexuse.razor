@@ -2,8 +2,10 @@
 
 @using Microsoft.FluentUI.AspNetCore.Components
 @using System.Diagnostics
+@using repositorymanagerclient.Components
 @using repositorymanagerclient.Shared
 
+@inject IDialogService DialogService
 @inject HttpClient Http
 @inject IConfiguration Configuration
 @inject ILogger<Nexuse> Logger
@@ -36,8 +38,8 @@ else
             </PropertyColumn>
             <PropertyColumn Title="Raw Nexuse" Property="@(c => c!.RawNexuse)" />
             <TemplateColumn Title="Actions" Align="@Align.End">
-                <FluentButton aria-label="Edit item" IconEnd="@(new Icons.Regular.Size16.Edit())" OnClick="@(() => Debug.WriteLine("Delete clicked"))" />
-                <FluentButton aria-label="Delete item" IconEnd="@(new Icons.Regular.Size16.Delete())" OnClick="@(() => Debug.WriteLine("Delete clicked"))" />
+                <FluentButton aria-label="Edit item" IconEnd="@(new Icons.Regular.Size16.Edit())" OnClick="@(async () => await EditAsync(context))" />
+                <FluentButton aria-label="Delete item" IconEnd="@(new Icons.Regular.Size16.Delete())" OnClick="@(async () => await EditAsync(context))" />
             </TemplateColumn>
         </FluentDataGrid>
 
@@ -54,9 +56,7 @@ else
 
 @code {
     private IQueryable<Models.RepositoryManager.Nexuse> nexuses = default!;
-    private PaginationState pagination = new PaginationState { ItemsPerPage = 25 };
-    private GridItemsProvider<Models.RepositoryManager.Nexuse> nexuseProvider = default!;
-    private int numResults = default;
+    private PaginationState pagination = new PaginationState { ItemsPerPage = 20 };
     private string nexuseFilter = string.Empty!;
 
     private IQueryable<Models.RepositoryManager.Nexuse> FilteredItems => nexuses.Where(x => x.NexuseValue.Contains(nexuseFilter, StringComparison.CurrentCultureIgnoreCase));
@@ -64,5 +64,25 @@ else
     protected override async Task OnInitializedAsync()
     {
         nexuses = (await WebRequests.GetAsync<Models.RepositoryManager.Nexuse[]>(Enums.WebRequestEndpoint.RepositoryManagerNexuse, Logger, Configuration)).AsQueryable();
+    }
+
+    private async Task EditAsync(Models.RepositoryManager.Nexuse nexuseContext)
+    {
+        Models.RepositoryManager.Nexuse nexuse = nexuseContext;
+
+        var dialog = await DialogService.ShowDialogAsync<SimpleEditDialog<Models.RepositoryManager.Nexuse>>(nexuse, new DialogParameters()
+            {
+                Height = "400px",
+                Title = $"Updating the {nexuse.NexuseValue} sheet",
+                PreventDismissOnOverlayClick = true,
+                PreventScroll = true,
+            });
+
+        var result = await dialog.Result;
+        if (!result.Cancelled && result.Data != null)
+        {
+            nexuse = (Models.RepositoryManager.Nexuse)result.Data;
+        }
+
     }
 }

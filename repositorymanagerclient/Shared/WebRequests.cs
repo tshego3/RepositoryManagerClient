@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System.Net.Http.Headers;
 
 namespace repositorymanagerclient.Shared
@@ -10,7 +9,7 @@ namespace repositorymanagerclient.Shared
         {
             try
             {
-                HttpClient client = new HttpClient();
+                HttpClient client = new();
                 HttpResponseMessage response = await client.GetAsync(GetUrl(webRequestEndpoint, logger, configuration));
                 if (response.IsSuccessStatusCode.Equals(true))
                 {
@@ -33,7 +32,7 @@ namespace repositorymanagerclient.Shared
         {
             try
             {
-                HttpClient client = new HttpClient();
+                 HttpClient client = new();
                 HttpContent content = new StringContent(JsonConvert.SerializeObject(model), new MediaTypeHeaderValue("application/json"));
                 HttpResponseMessage response = await client.PostAsync(GetUrl(webRequestEndpoint, logger, configuration), content);
                 if (response.IsSuccessStatusCode.Equals(true))
@@ -57,7 +56,7 @@ namespace repositorymanagerclient.Shared
         {
             try
             {
-                HttpClient client = new HttpClient();
+                 HttpClient client = new();
                 HttpContent content = new StringContent(JsonConvert.SerializeObject(model), new MediaTypeHeaderValue("application/json"));
                 HttpResponseMessage response = await client.PutAsync(GetUrl(webRequestEndpoint, logger, configuration), content);
                 if (response.IsSuccessStatusCode.Equals(true))
@@ -77,11 +76,11 @@ namespace repositorymanagerclient.Shared
             }
         }
 
-        public static async Task<T> DeleteAsync<T>(Enums.WebRequestEndpoint webRequestEndpoint, T model, ILogger logger, IConfiguration configuration)
+        public static async Task<T> DeleteAsync<T>(Enums.WebRequestEndpoint webRequestEndpoint, ILogger logger, IConfiguration configuration)
         {
             try
             {
-                HttpClient client = new HttpClient();
+                 HttpClient client = new();
                 HttpResponseMessage response = await client.DeleteAsync(GetUrl(webRequestEndpoint, logger, configuration));
                 if (response.IsSuccessStatusCode.Equals(true))
                 {
@@ -104,17 +103,13 @@ namespace repositorymanagerclient.Shared
         {
             try
             {
-                switch (webRequestEndpoint)
+                return webRequestEndpoint switch
                 {
-                    case Enums.WebRequestEndpoint.RepositoryManagerNexuse:
-                        return configuration.GetSection("RepositoryManagerNexuse").Value!;
-                    case Enums.WebRequestEndpoint.RepositoryManagerNote:
-                        return configuration.GetSection("RepositoryManagerNote").Value!;
-                    case Enums.WebRequestEndpoint.RepositoryManagerVibration:
-                        return configuration.GetSection("RepositoryManagerVibration").Value!;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(webRequestEndpoint), webRequestEndpoint, null);
-                }
+                    Enums.WebRequestEndpoint.RepositoryManagerNexuse => configuration.GetSection("RepositoryManagerNexuse").Value!,
+                    Enums.WebRequestEndpoint.RepositoryManagerNote => configuration.GetSection("RepositoryManagerNote").Value!,
+                    Enums.WebRequestEndpoint.RepositoryManagerVibration => configuration.GetSection("RepositoryManagerVibration").Value!,
+                    _ => throw new ArgumentOutOfRangeException(nameof(webRequestEndpoint), webRequestEndpoint, null),
+                };
             }
             catch (Exception ex)
             {
