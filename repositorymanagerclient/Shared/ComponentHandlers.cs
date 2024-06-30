@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.FluentUI.AspNetCore.Components;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace repositorymanagerclient.Shared
 {
@@ -33,6 +36,13 @@ namespace repositorymanagerclient.Shared
         public static void HandleRowFocus<T>(FluentDataGridRow<T> row = default!)
         {
             Debug.WriteLine($"[Custom comparer] Row focused: {row}");
+        }
+
+        public static string GetAttributeDisplayName(PropertyInfo property)
+        {
+            var atts = property.GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.DisplayAttribute), true);
+            if (atts.Length == 0) return default!;
+            return ((DisplayAttribute)atts[0]).Name!;
         }
 
         public class StringLengthComparer : IComparer<string>

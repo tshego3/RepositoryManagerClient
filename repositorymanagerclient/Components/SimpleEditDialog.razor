@@ -1,11 +1,13 @@
 ﻿@using System.ComponentModel.DataAnnotations
+@using System.Reflection
+@using System.ComponentModel
 @typeparam T
 @implements IDialogContentComponent<T>
 
 <FluentDialogHeader ShowDismiss="true">
     <FluentStack VerticalAlignment="VerticalAlignment.Center">
-        <FluentIcon Value="@(new Icons.Regular.Size24.WindowApps())" />
-        <FluentLabel Typo="Typography.PaneHeader">
+        <FluentIcon Value="@(new Icons.Regular.Size24.Attach())" />
+        <FluentLabel Style="width: 100%" Typo="Typography.PaneHeader">
             @Dialog.Instance.Parameters.Title
         </FluentLabel>
     </FluentStack>
@@ -18,10 +20,22 @@
         @foreach (var prop in typeof(T).GetProperties())
         {
             string propValue = (string)prop.GetValue(Content)!;
-            <FluentTextField Name="@prop.Name"
-                             @bind-Value="propValue"
-                             Label="@prop.Name"
-                             Required />
+            if (prop.Name.Equals("Id").Equals(true))
+            {
+                <FluentLabel Style="margin-bottom: 
+                                    16px; 
+                                    width: 100%"
+                >
+                    @string.Concat(Shared.ComponentHandlers.GetAttributeDisplayName(prop), ": ", propValue)
+                </FluentLabel>
+            }
+            else
+            {
+                <FluentTextField Name="@prop.Name"
+                                 @bind-Value="propValue"
+                                 Label="@string.Concat(Shared.ComponentHandlers.GetAttributeDisplayName(prop), ": ")"
+                                 Style="width: 100%" />
+            }
         }
 
         <div style="color: var(--error);">
