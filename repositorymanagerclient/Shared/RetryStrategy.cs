@@ -2,12 +2,12 @@
 {
     public static class RetryStrategy
     {
-        public static void Do(Action action, TimeSpan retryInterval, int maxAttemptCount = 5)
+        public static void Do(Action action, TimeSpan retryInterval, int maxAttemptCount = Constants.MaxAttempts)
         {
             Do<object>(() => { action(); return default!; }, retryInterval, maxAttemptCount);
         }
 
-        public static T Do<T>(Func<T> action, TimeSpan retryInterval, int maxAttemptCount = 5)
+        public static T Do<T>(Func<T> action, TimeSpan retryInterval, int maxAttemptCount = Constants.MaxAttempts)
         {
             var exceptions = new List<Exception>();
 
@@ -29,12 +29,12 @@
             throw new AggregateException(exceptions);
         }
 
-        public static Task DoAsync(Func<Task> action, TimeSpan retryInterval, int maxAttemptCount = 5)
+        public static Task DoAsync(Func<Task> action, TimeSpan retryInterval, int maxAttemptCount = Constants.MaxAttempts)
         {
             return DoAsync<object>(async () => { await action(); return default!; }, retryInterval, maxAttemptCount);
         }
 
-        public static async Task<T> DoAsync<T>(Func<Task<T>> action, TimeSpan retryInterval, int maxAttemptCount = 5)
+        public static async Task<T> DoAsync<T>(Func<Task<T>> action, TimeSpan retryInterval, int maxAttemptCount = Constants.MaxAttempts)
         {
             var exceptions = new List<Exception>();
 

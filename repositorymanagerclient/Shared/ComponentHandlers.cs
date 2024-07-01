@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.FluentUI.AspNetCore.Components;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Reflection;
@@ -40,9 +39,15 @@ namespace repositorymanagerclient.Shared
 
         public static string GetAttributeDisplayName(PropertyInfo property)
         {
-            var atts = property.GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.DisplayAttribute), true);
+            var atts = property.GetCustomAttributes(typeof(DisplayAttribute), true);
             if (atts.Length == 0) return default!;
             return ((DisplayAttribute)atts[0]).Name!;
+        }
+
+        public static void ParseGenericTypeToObject<T>(T _typeparam, out T typeparam)
+        {
+            T genericType = _typeparam;
+            typeparam     = genericType;
         }
 
         public class StringLengthComparer : IComparer<string>

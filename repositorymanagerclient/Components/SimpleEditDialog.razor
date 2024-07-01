@@ -1,7 +1,8 @@
 ﻿@using System.ComponentModel.DataAnnotations
 @using System.Reflection
 @using System.ComponentModel
-@typeparam T
+@using repositorymanagerclient.Shared
+@typeparam T  where T : class
 @implements IDialogContentComponent<T>
 
 <FluentDialogHeader ShowDismiss="true">
@@ -19,8 +20,8 @@
 
         @foreach (var prop in typeof(T).GetProperties())
         {
-            string propValue = (string)prop.GetValue(Content)!;
-            if (prop.Name.Equals("Id").Equals(true))
+            string propValue = Convert.ToString(prop.GetValue(Content))!;
+            if (prop.Name.Equals(Constants.RemoteDataGridPropertyColumnID).Equals(true))
             {
                 <FluentLabel Style="margin-bottom: 
                                     16px; 

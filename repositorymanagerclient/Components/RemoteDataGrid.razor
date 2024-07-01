@@ -1,0 +1,110 @@
+﻿@page "/components/remotedatagrid"
+
+@using Microsoft.FluentUI.AspNetCore.Components
+@using System.Diagnostics
+@using repositorymanagerclient.Components
+@using repositorymanagerclient.Shared
+
+@typeparam T where T : class
+@inject IDialogService DialogService
+@inject HttpClient Http
+@inject IConfiguration Configuration
+@inject ILogger<T> Logger
+@inject NavigationManager NavManager
+
+@if (remotoData == null)
+{
+    <FluentProgressRing></FluentProgressRing>
+}
+else
+{
+    <div style="height: auto; overflow:auto;" tabindex="-1">
+        <FluentDataGrid Items="@FilteredItems"
+                        ResizableColumns=true
+                        Pagination="@pagination"
+                        GenerateHeader="GenerateHeaderOption.Sticky"
+                        TGridItem="T"
+                        OnRowFocus="@(args => ComponentHandlers.HandleRowFocus<T>(args))"
+                        Style="height: auto; overflow:auto;"
+                        ShowHover="true">
+            @foreach (var prop in typeof(T).GetProperties())
+            {
+                var property = prop.PropertyType;
+                if (Constants.RemoteDataGridPropertyColumnSearch.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                                                .Any(s => Shared.ComponentHandlers.GetAttributeDisplayName(prop).Equals(s))
+                                                                .Equals(true))
+                {
+                    @* <PropertyColumn Property="@(typeof(prop))" InitialSortDirection=SortDirection.Descending Sortable="true" IsDefaultSortColumn=true Comparer="@ComponentHandlers.StringLengthComparer.Instance">
+                        <ColumnOptions>
+                            <div class="search-box">
+                                <FluentSearch type="search" Autofocus=true @bind-Value=searchFilter @oninput="@(args => ComponentHandlers.HandleFilter(args, out searchFilter))" AfterBindValue="@(() => ComponentHandlers.HandleClear(searchFilter, out searchFilter))" Placeholder="Search..." />
+                            </div>
+                        </ColumnOptions>
+                    </PropertyColumn> *@
+                }
+                else
+                {
+                    @* <PropertyColumn Property="@(typeof(prop))" /> *@
+                }
+            }
+           
+            <TemplateColumn Title="Actions" Align="@Align.End">
+                <FluentButton aria-label="Edit item" IconEnd="@(new Icons.Regular.Size16.Edit())" OnClick="@(async () => await EditAsync(context))" />
+                <FluentButton aria-label="Delete item" IconEnd="@(new Icons.Regular.Size16.Delete())" OnClick="@(async () => await EditAsync(context))" />
+            </TemplateColumn>
+        </FluentDataGrid>
+
+        <FluentPaginator State="@pagination">
+            <SummaryTemplate>
+                There are <strong>@(pagination.TotalItemCount ?? 0)</strong> rows
+            </SummaryTemplate>
+            <PaginationTextTemplate>
+                This is page <strong>@(pagination.CurrentPageIndex + 1)</strong> out of a total of <strong>@(pagination.LastPageIndex + 1)</strong> pages
+            </PaginationTextTemplate>
+        </FluentPaginator>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Enums.WebRequestEndpoint RequestEndpoint { get; set; } = default!;
+
+    [Parameter]
+    public T ParamContent { get; set; } = default!;
+
+    private IQueryable<T> remotoData = default!;
+    private PaginationState pagination = new PaginationState { ItemsPerPage = 15 };
+    private string searchFilter = string.Empty!;
+
+    private IQueryable<T> FilteredItems => default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        remotoData = (await WebRequests.GetAsync<T[]>(RequestEndpoint, Logger, Configuration)).AsQueryable();
+    }
+
+    private async Task EditAsync(T dataContext)
+    {
+        T data = dataContext;
+
+        var dialog = await DialogService.ShowDialogAsync<SimpleEditDialog<T>>(data, new DialogParameters()
+            {
+                Height = "auto",
+                Width = "50%",
+                // Title = typeof(T).GetProperties().Any(t => ((System.ComponentModel.DataAnnotations.DisplayAttribute)t.GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.DisplayAttribute), true).FirstOrDefault()).Name.),
+                // Title = typeof(T).GetProperties().Any(t => Constants.RemoteDataGridPropertyColumnSearch
+                //                                            .Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                //                                            .Any(s => ((System.ComponentModel.DataAnnotations.DisplayAttribute)t.GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.DisplayAttribute), true).FirstOrDefault()).Name.Equals(s))
+                //                                             .Equals(true))
+                PreventDismissOnOverlayClick = true,
+                PreventScroll = true,
+            });
+
+        var result = await dialog.Result;
+        if (!result.Cancelled && result.Data != null)
+        {
+            data = (T)result.Data;
+        }
+
+    }
+}
