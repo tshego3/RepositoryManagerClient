@@ -27,27 +27,27 @@ else
                         OnRowFocus="@(args => ComponentHandlers.HandleRowFocus<T>(args))"
                         Style="height: auto; overflow:auto;"
                         ShowHover="true">
+
             @foreach (var prop in typeof(T).GetProperties())
             {
-                var property = prop.PropertyType;
                 if (Constants.RemoteDataGridPropertyColumnSearch.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                                                                 .Any(s => Shared.ComponentHandlers.GetAttributeDisplayName(prop).Equals(s))
                                                                 .Equals(true))
                 {
-                    @* <PropertyColumn Property="@(typeof(prop))" InitialSortDirection=SortDirection.Descending Sortable="true" IsDefaultSortColumn=true Comparer="@ComponentHandlers.StringLengthComparer.Instance">
+                    <PropertyColumn Property="@(p => (string)prop.GetValue(remotoData)!)" InitialSortDirection=SortDirection.Descending Sortable="true" IsDefaultSortColumn=true Comparer="@ComponentHandlers.StringLengthComparer.Instance">
                         <ColumnOptions>
                             <div class="search-box">
                                 <FluentSearch type="search" Autofocus=true @bind-Value=searchFilter @oninput="@(args => ComponentHandlers.HandleFilter(args, out searchFilter))" AfterBindValue="@(() => ComponentHandlers.HandleClear(searchFilter, out searchFilter))" Placeholder="Search..." />
                             </div>
                         </ColumnOptions>
-                    </PropertyColumn> *@
+                    </PropertyColumn>
                 }
                 else
                 {
-                    @* <PropertyColumn Property="@(typeof(prop))" /> *@
+                    <PropertyColumn Property="@(p => prop.GetValue(remotoData))" />
                 }
             }
-           
+
             <TemplateColumn Title="Actions" Align="@Align.End">
                 <FluentButton aria-label="Edit item" IconEnd="@(new Icons.Regular.Size16.Edit())" OnClick="@(async () => await EditAsync(context))" />
                 <FluentButton aria-label="Delete item" IconEnd="@(new Icons.Regular.Size16.Delete())" OnClick="@(async () => await EditAsync(context))" />
@@ -69,9 +69,6 @@ else
     [Parameter]
     public Enums.WebRequestEndpoint RequestEndpoint { get; set; } = default!;
 
-    [Parameter]
-    public T ParamContent { get; set; } = default!;
-
     private IQueryable<T> remotoData = default!;
     private PaginationState pagination = new PaginationState { ItemsPerPage = 15 };
     private string searchFilter = string.Empty!;
@@ -91,11 +88,10 @@ else
             {
                 Height = "auto",
                 Width = "50%",
-                // Title = typeof(T).GetProperties().Any(t => ((System.ComponentModel.DataAnnotations.DisplayAttribute)t.GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.DisplayAttribute), true).FirstOrDefault()).Name.),
-                // Title = typeof(T).GetProperties().Any(t => Constants.RemoteDataGridPropertyColumnSearch
-                //                                            .Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                //                                            .Any(s => ((System.ComponentModel.DataAnnotations.DisplayAttribute)t.GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.DisplayAttribute), true).FirstOrDefault()).Name.Equals(s))
-                //                                             .Equals(true))
+                Title = Shared.ComponentHandlers.GetAttributeDisplayName(
+                    typeof(T).GetProperties().Where(p => Constants.RemoteDataGridPropertyColumnSearch.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                                                .Any(s => Shared.ComponentHandlers.GetAttributeDisplayName(p).Equals(s))
+                                                                .Equals(true)).FirstOrDefault()!),
                 PreventDismissOnOverlayClick = true,
                 PreventScroll = true,
             });
