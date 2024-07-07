@@ -1,0 +1,89 @@
+﻿@page "/repositorymanager/vibration"
+
+@using Microsoft.FluentUI.AspNetCore.Components
+@using System.Diagnostics
+@using repositorymanagerclient.Components
+@using repositorymanagerclient.Shared
+
+@inject IDialogService DialogService
+@inject HttpClient Http
+@inject IConfiguration Configuration
+@inject ILogger<Nexuse> Logger
+@inject NavigationManager NavManager
+
+@if (vibrations == null)
+{
+    <FluentProgressRing></FluentProgressRing>
+}
+else
+{
+    <div style="height: auto; overflow:auto;" tabindex="-1">
+        <FluentDataGrid Items="@FilteredItems"
+                        ResizableColumns=true
+                        Pagination="@pagination"
+                        GenerateHeader="GenerateHeaderOption.Sticky"
+                        TGridItem="Models.RepositoryManager.Vibration"
+                        OnRowFocus="@(args => ComponentHandlers.HandleRowFocus<Models.RepositoryManager.Vibration>(args))"
+                        GridTemplateColumns="0.2fr 1fr 0.2fr 0.2fr"
+                        Style="height: auto; overflow:auto;"
+                        ShowHover="true">
+            <PropertyColumn Property="@(c => c!.Id)" />
+            <PropertyColumn Property="@(c => c!.TrackName)" InitialSortDirection=SortDirection.Descending Sortable="true" IsDefaultSortColumn=true Comparer="@ComponentHandlers.StringLengthComparer.Instance">
+                <ColumnOptions>
+                    <div class="search-box">
+                        <FluentSearch type="search" Autofocus=true @bind-Value=vibrationFilter @oninput="@(args => ComponentHandlers.HandleFilter(args, out vibrationFilter))" AfterBindValue="@(() => ComponentHandlers.HandleClear(vibrationFilter, out vibrationFilter))" Placeholder="Search..." />
+                    </div>
+                </ColumnOptions>
+            </PropertyColumn>
+            <PropertyColumn Property="@(c => c!.ArtistName)" />
+            <PropertyColumn Property="@(c => c!.AlbumName)" />
+            <TemplateColumn Title="Actions" Align="@Align.End">
+                <FluentButton aria-label="Edit item" IconEnd="@(new Icons.Regular.Size16.Edit())" OnClick="@(async () => await EditAsync(context))" />
+                <FluentButton aria-label="Delete item" IconEnd="@(new Icons.Regular.Size16.Delete())" OnClick="@(async () => await EditAsync(context))" />
+            </TemplateColumn>
+        </FluentDataGrid>
+
+        <FluentPaginator State="@pagination">
+            <SummaryTemplate>
+                There are <strong>@(pagination.TotalItemCount ?? 0)</strong> rows
+            </SummaryTemplate>
+            <PaginationTextTemplate>
+                This is page <strong>@(pagination.CurrentPageIndex + 1)</strong> out of a total of <strong>@(pagination.LastPageIndex + 1)</strong> pages
+            </PaginationTextTemplate>
+        </FluentPaginator>
+    </div>
+}
+
+@code {
+    private IQueryable<Models.RepositoryManager.Vibration> vibrations = default!;
+    private PaginationState pagination = new PaginationState { ItemsPerPage = 15 };
+    private string vibrationFilter = string.Empty!;
+
+    private IQueryable<Models.RepositoryManager.Vibration> FilteredItems => vibrations.Where(x => x.TrackName.Contains(vibrationFilter, StringComparison.CurrentCultureIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        vibrations = (await WebRequests.GetAsync<Models.RepositoryManager.Vibration[]>(Enums.WebRequestEndpoint.RepositoryManagerVibration, Logger, Configuration)).AsQueryable();
+    }
+
+    private async Task EditAsync(Models.RepositoryManager.Vibration vibrationContext)
+    {
+        Models.RepositoryManager.Vibration vibration = vibrationContext;
+
+        var dialog = await DialogService.ShowDialogAsync<SimpleEditDialog<Models.RepositoryManager.Vibration>>(vibration, new DialogParameters()
+            {
+                Height = "auto",
+                Width = "50%",
+                Title = vibration.TrackName,
+                PreventDismissOnOverlayClick = true,
+                PreventScroll = true,
+            });
+
+        var result = await dialog.Result;
+        if (!result.Cancelled && result.Data != null)
+        {
+            vibration = (Models.RepositoryManager.Vibration)result.Data;
+        }
+
+    }
+}

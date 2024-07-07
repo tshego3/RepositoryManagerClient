@@ -1,4 +1,4 @@
-﻿@page "/repositorymanager/nexuse"
+﻿@page "/repositorymanager/note"
 
 @using Microsoft.FluentUI.AspNetCore.Components
 @using System.Diagnostics
@@ -11,7 +11,7 @@
 @inject ILogger<Nexuse> Logger
 @inject NavigationManager NavManager
 
-@if (nexuses == null)
+@if (notes == null)
 {
     <FluentProgressRing></FluentProgressRing>
 }
@@ -19,23 +19,22 @@ else
 {
     <div style="height: auto; overflow:auto;" tabindex="-1">
         <FluentDataGrid Items="@FilteredItems"
-                ResizableColumns=true
-                Pagination="@pagination"
-                GenerateHeader="GenerateHeaderOption.Sticky"
-                TGridItem="Models.RepositoryManager.Nexuse"
-                OnRowFocus="@(args => ComponentHandlers.HandleRowFocus<Models.RepositoryManager.Nexuse>(args))"
-                GridTemplateColumns="0.2fr 1fr 0.2fr 0.2fr"
-                Style="height: auto; overflow:auto;"
-                ShowHover="true">
+                        ResizableColumns=true
+                        Pagination="@pagination"
+                        GenerateHeader="GenerateHeaderOption.Sticky"
+                        TGridItem="Models.RepositoryManager.Note"
+                        OnRowFocus="@(args => ComponentHandlers.HandleRowFocus<Models.RepositoryManager.Note>(args))"
+                        GridTemplateColumns="0.2fr 1fr 0.2fr 0.2fr"
+                        Style="height: auto; overflow:auto;"
+                        ShowHover="true">
             <PropertyColumn Property="@(c => c!.Id)" />
-            <PropertyColumn Property="@(c => c!.NexuseValue)" InitialSortDirection=SortDirection.Descending Sortable="true" IsDefaultSortColumn=true Comparer="@ComponentHandlers.StringLengthComparer.Instance">
+            <PropertyColumn Property="@(c => c!.NoteValue)" InitialSortDirection=SortDirection.Descending Sortable="true" IsDefaultSortColumn=true Comparer="@ComponentHandlers.StringLengthComparer.Instance">
                 <ColumnOptions>
                     <div class="search-box">
-                        <FluentSearch type="search" Autofocus=true @bind-Value=nexuseFilter @oninput="@(args => ComponentHandlers.HandleFilter(args, out nexuseFilter))" AfterBindValue="@(() => ComponentHandlers.HandleClear(nexuseFilter, out nexuseFilter))" Placeholder="Search..." />
+                        <FluentSearch type="search" Autofocus=true @bind-Value=noteFilter @oninput="@(args => ComponentHandlers.HandleFilter(args, out noteFilter))" AfterBindValue="@(() => ComponentHandlers.HandleClear(noteFilter, out noteFilter))" Placeholder="Search..." />
                     </div>
                 </ColumnOptions>
             </PropertyColumn>
-            <PropertyColumn Property="@(c => c!.RawNexuse)" />
             <TemplateColumn Title="Actions" Align="@Align.End">
                 <FluentButton aria-label="Edit item" IconEnd="@(new Icons.Regular.Size16.Edit())" OnClick="@(async () => await EditAsync(context))" />
                 <FluentButton aria-label="Delete item" IconEnd="@(new Icons.Regular.Size16.Delete())" OnClick="@(async () => await EditAsync(context))" />
@@ -54,26 +53,26 @@ else
 }
 
 @code {
-    private IQueryable<Models.RepositoryManager.Nexuse> nexuses = default!;
+    private IQueryable<Models.RepositoryManager.Note> notes = default!;
     private PaginationState pagination = new PaginationState { ItemsPerPage = 15 };
-    private string nexuseFilter = string.Empty!;
+    private string noteFilter = string.Empty!;
 
-    private IQueryable<Models.RepositoryManager.Nexuse> FilteredItems => nexuses.Where(x => x.NexuseValue.Contains(nexuseFilter, StringComparison.CurrentCultureIgnoreCase));
+    private IQueryable<Models.RepositoryManager.Note> FilteredItems => notes.Where(x => x.NoteValue.Contains(noteFilter, StringComparison.CurrentCultureIgnoreCase));
 
     protected override async Task OnInitializedAsync()
     {
-        nexuses = (await WebRequests.GetAsync<Models.RepositoryManager.Nexuse[]>(Enums.WebRequestEndpoint.RepositoryManagerNexuse, Logger, Configuration)).AsQueryable();
+        notes = (await WebRequests.GetAsync<Models.RepositoryManager.Note[]>(Enums.WebRequestEndpoint.RepositoryManagerNote, Logger, Configuration)).AsQueryable();
     }
 
-    private async Task EditAsync(Models.RepositoryManager.Nexuse nexuseContext)
+    private async Task EditAsync(Models.RepositoryManager.Note noteContext)
     {
-        Models.RepositoryManager.Nexuse nexuse = nexuseContext;
+        Models.RepositoryManager.Note note = noteContext;
 
-        var dialog = await DialogService.ShowDialogAsync<SimpleEditDialog<Models.RepositoryManager.Nexuse>>(nexuse, new DialogParameters()
+        var dialog = await DialogService.ShowDialogAsync<SimpleEditDialog<Models.RepositoryManager.Note>>(note, new DialogParameters()
             {
                 Height = "auto",
                 Width = "50%",
-                Title = nexuse.NexuseValue,
+                Title = note.NoteValue,
                 PreventDismissOnOverlayClick = true,
                 PreventScroll = true,
             });
@@ -81,7 +80,7 @@ else
         var result = await dialog.Result;
         if (!result.Cancelled && result.Data != null)
         {
-            nexuse = (Models.RepositoryManager.Nexuse)result.Data;
+            note = (Models.RepositoryManager.Note)result.Data;
         }
 
     }
