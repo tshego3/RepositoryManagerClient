@@ -71,7 +71,7 @@ else
         var dialog = await DialogService.ShowDialogAsync<SimpleEditDialog<Models.RepositoryManager.Note>>(note, new DialogParameters()
             {
                 Height = "auto",
-                Width = "50%",
+                Width = "50vw",
                 Title = note.NoteValue,
                 PreventDismissOnOverlayClick = true,
                 PreventScroll = true,
